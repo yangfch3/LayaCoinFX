@@ -98,9 +98,11 @@ var MiniAdpter=(function(){
 	}
 
 	MiniAdpter.getUrlEncode=function(url,type){
-		if(type=="arraybuffer")
-			return "";
-		return "utf8";
+		if(url.indexOf(".fnt")!=-1)
+			return "utf8";
+		else if(type=="arraybuffer")
+		return "";
+		return "ascii";
 	}
 
 	MiniAdpter.downLoadFile=function(fileUrl,fileType,callBack,encoding){

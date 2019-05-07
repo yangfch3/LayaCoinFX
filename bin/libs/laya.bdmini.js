@@ -4,8 +4,9 @@
 
 	var Browser=laya.utils.Browser,Event=laya.events.Event,EventDispatcher=laya.events.EventDispatcher;
 	var HTMLImage=laya.resource.HTMLImage,Handler=laya.utils.Handler,Input=laya.display.Input,Loader=laya.net.Loader;
-	var LocalStorage=laya.net.LocalStorage,Matrix=laya.maths.Matrix,Render=laya.renders.Render,RunDriver=laya.utils.RunDriver;
-	var SoundChannel=laya.media.SoundChannel,SoundManager=laya.media.SoundManager,URL=laya.net.URL,Utils=laya.utils.Utils;
+	var LocalStorage=laya.net.LocalStorage,Matrix=laya.maths.Matrix,MiniAdpter=laya.wx.mini.MiniAdpter,Render=laya.renders.Render;
+	var RunDriver=laya.utils.RunDriver,SoundChannel=laya.media.SoundChannel,SoundManager=laya.media.SoundManager;
+	var URL=laya.net.URL,Utils=laya.utils.Utils;
 //class laya.bd.mini.BMiniAdapter
 var BMiniAdapter=(function(){
 	function BMiniAdapter(){}
@@ -32,12 +33,8 @@ var BMiniAdapter=(function(){
 			MiniFileMgr$1.setNativeFileDir("/layaairGame");
 			MiniFileMgr$1.existDir(MiniFileMgr$1.fileNativeDir,Handler.create(BMiniAdapter,BMiniAdapter.onMkdirCallBack));
 		}
-		if(!BMiniAdapter.isZiYu){
-			BMiniAdapter.systemInfo=BMiniAdapter.window.swan.getSystemInfoSync();
-		}
+		BMiniAdapter.systemInfo=/*__JS__ */swan.getSystemInfoSync();
 		BMiniAdapter.window.focus=function (){
-		};
-		Laya['getUrlPath']=function (){
 		};
 		Laya['_getUrlPath']=function (){
 		};
@@ -62,48 +59,21 @@ var BMiniAdapter=(function(){
 		BMiniAdapter.EnvConfig.load=Loader.prototype.load;
 		Loader.prototype.load=MiniLoader$1.prototype.load;
 		Loader.prototype._loadImage=MiniImage$1.prototype._loadImage;
-		LocalStorage._baseClass=MiniLocalStorage$1;
 		MiniLocalStorage$1.__init__();
-		BMiniAdapter.onReciveData();
-	}
-
-	BMiniAdapter.onReciveData=function(){
-		if(laya.bd.mini.BMiniAdapter.isZiYu){
-			BMiniAdapter.window.swan.onMessage(function(message){
-				if(message['isLoad']=="opendatacontext"){
-					if(message.url){
-						MiniFileMgr$1.ziyuFileData[message.url]=message.atlasdata;
-						MiniFileMgr$1.ziyuFileTextureData[message.imgReadyUrl]=message.imgNativeUrl;
-					}
-					}else if(message['isLoad']=="openJsondatacontext"){
-					if(message.url){
-						MiniFileMgr$1.ziyuFileData[message.url]=message.atlasdata;
-					}
-					}else if(message['isLoad']=="openJsondatacontextPic"){
-					MiniFileMgr$1.ziyuFileTextureData[message.imgReadyUrl]=message.imgNativeUrl;
-				}
-			});
-		}
-	}
-
-	BMiniAdapter.measureText=function(str){
-		var tempObj=BMiniAdapter._measureText(str);
-		if(!tempObj){
-			tempObj={width:16};
-			console.warn("-------微信获取文字宽度失败----等待修复---------");
-		}
-		return tempObj;
+		LocalStorage._baseClass=MiniLocalStorage$1;
 	}
 
 	BMiniAdapter.getUrlEncode=function(url,type){
-		if(type=="arraybuffer")
-			return "";
-		return "utf8";
+		if(url.indexOf(".fnt")!=-1)
+			return "utf8";
+		else if(type=="arraybuffer")
+		return "";
+		return "ascii";
 	}
 
 	BMiniAdapter.downLoadFile=function(fileUrl,fileType,callBack,encoding){
 		(fileType===void 0)&& (fileType="");
-		(encoding===void 0)&& (encoding="utf8");
+		(encoding===void 0)&& (encoding="ascii");
 		var fileObj=MiniFileMgr$1.getFileInfo(fileUrl);
 		if(!fileObj)
 			MiniFileMgr$1.downLoadFile(fileUrl,fileType,callBack,encoding);
@@ -133,7 +103,7 @@ var BMiniAdapter=(function(){
 	}
 
 	BMiniAdapter.exitMiniProgram=function(){
-		BMiniAdapter.window.swan.exitMiniProgram();
+		BMiniAdapter.window["wx"].exitMiniProgram();
 	}
 
 	BMiniAdapter.onMkdirCallBack=function(errorCode,data){
@@ -159,10 +129,10 @@ var BMiniAdapter=(function(){
 					_source=/*__JS__ */sharedCanvas;
 					_source.style={};
 					}else{
-					_source=BMiniAdapter.window.canvas;
+					_source=/*__JS__ */window.canvas;
 				}
 				}else {
-				_source=BMiniAdapter.window.swan.createCanvas();
+				_source=/*__JS__ */window.swan.createCanvas();
 			}
 			BMiniAdapter.idx++;
 			return _source;
@@ -216,7 +186,7 @@ var BMiniAdapter=(function(){
 	}
 
 	BMiniAdapter.sendAtlasToOpenDataContext=function(url){
-		if(!laya.bd.mini.BMiniAdapter.isZiYu){
+		if(!MiniAdpter.isZiYu){
 			var atlasJson=Loader.getRes(URL.formatURL(url));
 			if(atlasJson){
 				var textureArr=(atlasJson.meta.image).split(",");
@@ -270,17 +240,17 @@ var BMiniAdapter=(function(){
 			fileNativeUrl=url;
 		}
 		if(fileNativeUrl){
-			BMiniAdapter.window.swan.postMessage({url:url,imgNativeUrl:fileNativeUrl,imgReadyUrl:url,isLoad:"openJsondatacontextPic"});
+			/*__JS__ */wx.postMessage({url:url,imgNativeUrl:fileNativeUrl,imgReadyUrl:url,isLoad:"openJsondatacontextPic"});
 			}else{
 			throw "获取图集的磁盘url路径不存在！";
 		}
 	}
 
 	BMiniAdapter.sendJsonDataToDataContext=function(url){
-		if(!laya.bd.mini.BMiniAdapter.isZiYu){
+		if(!MiniAdpter.isZiYu){
 			var atlasJson=Loader.getRes(url);
 			if(atlasJson){
-				BMiniAdapter.window.swan.postMessage({url:url,atlasdata:atlasJson,isLoad:"openJsondatacontext"});
+				/*__JS__ */wx.postMessage({url:url,atlasdata:atlasJson,isLoad:"openJsondatacontext"});
 				}else{
 				throw "传递的url没有获取到对应的图集数据信息，请确保图集已经过！";
 			}
@@ -291,16 +261,11 @@ var BMiniAdapter=(function(){
 	BMiniAdapter.window=null;
 	BMiniAdapter._preCreateElement=null;
 	BMiniAdapter._inited=false;
-	BMiniAdapter.systemInfo={};
+	BMiniAdapter.systemInfo=null;
 	BMiniAdapter.isZiYu=false;
 	BMiniAdapter.isPosMsgYu=false;
 	BMiniAdapter.autoCacheFile=true;
 	BMiniAdapter.minClearSize=(5 *1024 *1024);
-	BMiniAdapter.subNativeFiles=null;
-	BMiniAdapter.subNativeheads=[];
-	BMiniAdapter.subMaps=[];
-	BMiniAdapter.AutoCacheDownFile=false;
-	BMiniAdapter._measureText=null;
 	BMiniAdapter.parseXMLFromString=function(value){
 		var rst;
 		var Parser;
@@ -566,6 +531,7 @@ var MiniFileMgr$1=(function(){
 				},fail:function (data){
 		}});
 		if(!BMiniAdapter.isZiYu &&BMiniAdapter.isPosMsgYu){
+			/*__JS__ */wx.postMessage({url:fileurlkey,data:MiniFileMgr.filesListObj[fileurlkey],isLoad:"filenative",isAdd:isAdd});
 		}
 	}
 

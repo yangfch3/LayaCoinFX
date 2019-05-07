@@ -425,7 +425,7 @@ var ___Laya=(function(){
 	Laya.timer=null;
 	Laya.scaleTimer=null;
 	Laya.loader=null;
-	Laya.version="1.8.2beta";
+	Laya.version="1.7.22";
 	Laya.render=null;
 	Laya._currentStage=null;
 	Laya._isinit=false;
@@ -453,7 +453,6 @@ var Config=(function(){
 	Config.premultipliedAlpha=true;
 	Config.isStencil=true;
 	Config.preserveDrawingBuffer=false;
-	Config.useRetinalCanvas=false;
 	return Config;
 })()
 
@@ -561,7 +560,7 @@ var EventDispatcher=(function(){
 		(onceOnly===void 0)&& (onceOnly=false);
 		if (!this._events || !this._events[type])return this;
 		var listeners=this._events[type];
-		if (listeners !=null){
+		if (listener !=null){
 			if (listeners.run){
 				if ((!caller || listeners.caller===caller)&& listeners.method===listener && (!onceOnly || listeners.once)){
 					delete this._events[type];
@@ -4854,12 +4853,7 @@ var SoundManager=(function(){
 		if (value){
 			if (SoundManager._tMusic){
 				if (SoundManager._musicChannel&&!SoundManager._musicChannel.isStopped){
-					if (Render.isConchApp){
-						/*__JS__ */if (SoundManager._musicChannel._audio)SoundManager._musicChannel._audio.muted=true;;
-					}
-					else {
-						SoundManager._musicChannel.pause();
-					}
+					SoundManager._musicChannel.pause();
 					}else{
 					SoundManager._musicChannel=null;
 				}
@@ -4871,12 +4865,7 @@ var SoundManager=(function(){
 			SoundManager._musicMuted=value;
 			if (SoundManager._tMusic){
 				if (SoundManager._musicChannel){
-					if (Render.isConchApp){
-						/*__JS__ */if (SoundManager._musicChannel._audio)SoundManager._musicChannel._audio.muted=false;;
-					}
-					else {
-						SoundManager._musicChannel.resume();
-					}
+					SoundManager._musicChannel.resume();
 				}
 			}
 		}
@@ -4972,14 +4961,14 @@ var SoundManager=(function(){
 			if (SoundManager._soundMuted)return null;
 		};
 		var tSound;
-		if (!Browser.onMiniGame && !Browser.onKGMiniGame){
+		if (!Browser.onMiniGame){
 			tSound=Laya.loader.getRes(url);
 		}
 		if (!soundClass)soundClass=SoundManager._soundClass;
 		if (!tSound){
 			tSound=new soundClass();
 			tSound.load(url);
-			if (!Browser.onMiniGame && !Browser.onKGMiniGame){
+			if (!Browser.onMiniGame){
 				Loader.cacheRes(url,tSound);
 			}
 		};
@@ -5450,8 +5439,7 @@ var Render=(function(){
 		Render._mainCanvas.source.width=width;
 		Render._mainCanvas.source.height=height;
 		isWebGl && Render.WebGL.init(Render._mainCanvas,width,height);
-		if(!Browser.onKGMiniGame)
-			Browser.container.appendChild(Render._mainCanvas.source);
+		Browser.container.appendChild(Render._mainCanvas.source);
 		Render._context=new RenderContext(width,height,isWebGl ? null :Render._mainCanvas);
 		Render._context.ctx.setIsMainContext();
 		Browser.window.requestAnimationFrame(loop);
@@ -7148,12 +7136,7 @@ var Browser=(function(){
 		Browser.onFirefox=/*[SAFE]*/ Browser.u.indexOf('Firefox')>-1;
 		Browser.onEdge=/*[SAFE]*/ Browser.u.indexOf('Edge')>-1;
 		Browser.onMiniGame=/*[SAFE]*/ Browser.u.indexOf('MiniGame')>-1;
-		Browser.onTTMiniGame=/*[SAFE]*/ Browser.u.indexOf('TTGame')>-1;
-		Browser.onBDMiniGame=/*[SAFE]*/ Browser.u.indexOf('SwanGame')>-1;
-		Browser.onQGMiniGame=/*[SAFE]*/ Browser.u.indexOf('QGGame')>-1;
-		Browser.onKGMiniGame=/*[SAFE]*/ Browser.u.indexOf('QuickGame')>-1;
 		Browser.onLimixiu=/*[SAFE]*/ Browser.u.indexOf('limixiu')>-1;
-		Browser.onIPhoneX=/iPhone/gi.test(Browser.window.navigator.userAgent)&& (Math.min(Browser.clientHeight,Browser.clientWidth)==375 && Math.max(Browser.clientHeight,Browser.clientWidth)==812);
 		Browser.httpProtocol=/*[SAFE]*/ Browser.window.location.protocol=="http:";
 		if (Browser.onMiniGame && Browser.window.focus==null){
 			console.error("请先初始化小游戏适配库，详细教程https://ldc.layabox.com/doc/?nav=zh-ts-5-0-0");
@@ -7228,10 +7211,6 @@ var Browser=(function(){
 	Browser.onIE=false;
 	Browser.onWeiXin=false;
 	Browser.onMiniGame=false;
-	Browser.onTTMiniGame=false;
-	Browser.onBDMiniGame=false;
-	Browser.onKGMiniGame=false;
-	Browser.onQGMiniGame=false;
 	Browser.onLimixiu=false;
 	Browser.onPC=false;
 	Browser.httpProtocol=false;
@@ -7240,7 +7219,6 @@ var Browser=(function(){
 	Browser.enableTouch=false;
 	Browser.canvas=null;
 	Browser.context=null;
-	Browser.onIPhoneX=false;
 	Browser.__init$=function(){
 		AudioSound;
 		WebAudioSound;
@@ -9274,7 +9252,7 @@ var Stat=(function(){
 			Browser.window.conch.showFPS && Browser.window.conch.showFPS(x,y);
 			return;
 		}
-		if (!Render.isConchWebGL && !Browser.onMiniGame &&! Browser.onLimixiu && !Browser.onKGMiniGame && !Browser.onBDMiniGame&& !Browser.onTTMiniGame)Stat._useCanvas=true;
+		if (!Render.isConchWebGL && !Browser.onMiniGame &&! Browser.onLimixiu)Stat._useCanvas=true;
 		Stat._show=true;
 		Stat._fpsData.length=60;
 		Stat._view[0]={title:"FPS(Canvas)",value:"_fpsStr",color:"yellow",units:"int"};
@@ -9323,9 +9301,7 @@ var Stat=(function(){
 		Stat._first=true;
 		Stat.loop();
 		Stat._first=false;
-		if(!Browser.onKGMiniGame){
-			Browser.container.appendChild(Stat._canvas.source);
-		}
+		Browser.container.appendChild(Stat._canvas.source);
 	}
 
 	Stat.createUI=function(x,y){
@@ -11989,11 +11965,8 @@ var AudioSound=(function(_super){
 	*/
 	__proto.dispose=function(){
 		var ad=AudioSound._audioCache[this.url];
-		Pool.clearBySign("audio:"+this.url);
 		if (ad){
-			if (!Render.isConchApp){
-				ad.src="";
-			}
+			ad.src="";
 			delete AudioSound._audioCache[this.url];
 		}
 	}
@@ -17718,19 +17691,7 @@ var Text=(function(_super){
 			this.graphics.clear(true);
 			return;
 		}
-		if (Render.isConchApp){
-			var ctxFont=""+this._getCSSStyle().font;
-			var style=this._getCSSStyle();
-			if (style.stroke){
-				if (this._getCSSStyle().strokeColor){
-					ctxFont+=" "+1+" "+this._getCSSStyle().strokeColor;
-				}
-			}
-			Browser.context.font=ctxFont;
-		}
-		else {
-			Browser.context.font=this._getCSSStyle().font;
-		}
+		Browser.context.font=this._getCSSStyle().font;
 		this._lines.length=0;
 		this._lineWidths.length=0;
 		if (this._isPassWordMode()){
@@ -18356,8 +18317,6 @@ var Stage=(function(_super){
 		this._scenes=null;
 		/**@private */
 		this._frameRate="fast";
-		/**使用物理分辨率作为canvas大小，会改进渲染效果，但是会降低性能*/
-		this.useRetinalCanvas=false;
 		Stage.__super.call(this);
 		this.offset=new Point();
 		this._canvasTransform=new Matrix();
@@ -18371,7 +18330,6 @@ var Stage=(function(_super){
 		this._displayedInStage=true;
 		this._isFocused=true;
 		this._isVisibility=true;
-		this.useRetinalCanvas=Config.useRetinalCanvas;
 		var window=Browser.window;
 		var _this=this;
 		window.addEventListener("focus",function(){
@@ -18482,8 +18440,8 @@ var Stage=(function(_super){
 		var scaleMode=this._scaleMode;
 		var scaleX=screenWidth / this.designWidth;
 		var scaleY=screenHeight / this.designHeight;
-		var canvasWidth=Config.useRetinalCanvas?screenWidth:this.designWidth;
-		var canvasHeight=Config.useRetinalCanvas?screenHeight:this.designHeight;
+		var canvasWidth=this.designWidth;
+		var canvasHeight=this.designHeight;
 		var realWidth=screenWidth;
 		var realHeight=screenHeight;
 		var pixelRatio=Browser.pixelRatio;
@@ -18529,10 +18487,6 @@ var Stage=(function(_super){
 				break ;
 			}
 		if (this.conchModel)this.conchModel.size(this._width,this._height);
-		if (Config.useRetinalCanvas){
-			canvasWidth=screenWidth;
-			canvasHeight=screenHeight;
-		}
 		scaleX *=this.scaleX;
 		scaleY *=this.scaleY;
 		if (scaleX===1 && scaleY===1){
@@ -20016,14 +19970,12 @@ var Input=(function(_super){
 		Laya.stage.focus=this;
 		this.event(/*laya.events.Event.FOCUS*/"focus");
 		if (Browser.onPC)input.focus();
-		if(!Browser.onMiniGame && !Browser.onBDMiniGame && !Browser.onTTMiniGame){
+		if(!Browser.onMiniGame){
 			var temp=this._text;
 			this._text=null;
 		}
 		this.typeset();
 		input.setColor(this._originColor);
-		if(input.setBgColor)
-			input.setBgColor(this.bgColor);
 		input.setFontSize(this.fontSize);
 		input.setFontFace(Browser.onIPhone ? (Text._fontFamilyMap[this.font] || this.font):this.font);
 		if (Render.isConchApp){
@@ -20295,13 +20247,8 @@ var Input=(function(_super){
 
 	Input.__init__=function(){
 		Input._createInputElement();
-		if (Browser.onMobile){
-			var isTrue=false;
-			if(Browser.onMiniGame || Browser.onBDMiniGame || Browser.onKGMiniGame || Browser.onTTMiniGame){
-				isTrue=true;
-			}
-			Render.canvas.addEventListener(Input.IOS_IFRAME ?(isTrue ? "touchend" :"click"):"touchend",Input._popupInputMethod);
-		}
+		if (Browser.onMobile)
+			Render.canvas.addEventListener(Input.IOS_IFRAME ?(Browser.onMiniGame ? "touchend" :"click"):"touchend",Input._popupInputMethod);
 	}
 
 	Input._popupInputMethod=function(e){
@@ -21243,7 +21190,7 @@ var GraphicAnimation=(function(_super){
 })(FrameAnimation)
 
 
-	Laya.__init([EventDispatcher,LoaderManager,GraphicAnimation,Render,Browser,Timer,LocalStorage,TimeLine]);
+	Laya.__init([EventDispatcher,LoaderManager,Render,Browser,Timer,LocalStorage,TimeLine,GraphicAnimation]);
 })(window,document,Laya);
 
 (function(window,document,Laya){

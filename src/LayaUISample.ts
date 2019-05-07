@@ -4,66 +4,102 @@ import Handler = Laya.Handler;
 import Loader = Laya.Loader;
 import WebGL = Laya.WebGL;
 
-class TestUI extends ui.test.TestPageUI {
+class ClickPlaygroundView extends ui.test.CoinFXUI {
+	private isRunningFX: boolean = false
+	private coinCount: number = 1000
 
 	constructor() {
 		super();
-		//btn是编辑器界面设定的，代码里面能直接使用，并且有代码提示
-		this.btn.on(Laya.Event.CLICK, this, this.onBtnClick);
-		this.btn2.on(Laya.Event.CLICK, this, this.onBtn2Click);
+		this.on(Laya.Event.CLICK, this, this.onClick);
+		this.boxCoins.alpha = 0
+		this.labelCoins.text = `${this.coinCount}`
 	}
 
-	private onBtnClick(): void {
-		//手动控制组件属性
-		this.radio.selectedIndex = 1;
-		this.clip.index = 8;
-		this.tab.selectedIndex = 2;
-		this.combobox.selectedIndex = 0;
-		this.check.selected = true;
-	}
-
-	private onBtn2Click(): void {
-		//通过赋值可以简单快速修改组件属性
-		//赋值有两种方式：
-		//简单赋值，比如：progress:0.2，就是更改progress组件的value为2
-		//复杂复制，可以通知某个属性，比如：label:{color:"#ff0000",text:"Hello LayaAir"}
-		this.box.dataSource = { slider: 50, scroll: 80, progress: 0.2, input: "This is a input", label: { color: "#ff0000", text: "Hello LayaAir" } };
-
-		//list赋值，先获得一个数据源数组
-		var arr: Array<any> = [];
-		for (var i: number = 0; i < 100; i++) {
-			arr.push({ label: "item " + i, clip: i % 9 });
+	private onClick(e: Laya.Event): void {
+		if (this.isRunningFX) {
+			return
 		}
 
-		//给list赋值更改list的显示
-		this.list.array = arr;
+		this.boxCoins.pos(e.stageX, e.stageY)
+		console.log(e.stageX, e.stageY)
 
-		//还可以自定义list渲染方式，可以打开下面注释看一下效果
-		//list.renderHandler = new Handler(this, onListRender);
+		Laya.timer.once(100, this, this.play)
 	}
 
-	private onListRender(item: Laya.Box, index: number): void {
-		//自定义list的渲染方式
-		var label: Label = item.getChildByName("label") as Label;
-		if (index % 2) {
-			label.color = "#ff0000";
-		} else {
-			label.color = "#000000";
-		}
+	private play() {
+		this.isRunningFX = true
+
+		let oldCount = this.coinCount
+		let newCount = this.coinCount + 100 + Math.floor(Math.random() * 1000)
+		this.coinCount = newCount
+
+		let coinFlyTargetGlobal = this.imgCoin.localToGlobal(new Laya.Point(5, 5))
+		console.log(coinFlyTargetGlobal)
+		let coinFlyTargetToBoxLocal = this.boxCoins.globalToLocal(coinFlyTargetGlobal, true)
+
+		console.log(coinFlyTargetToBoxLocal)
+
+		this.ani1.play(0, false)
+		this.ani1.once(Laya.Event.COMPLETE, this, function (this: ClickPlaygroundView) {
+			let delayTime = 0
+			this.imgCoin.scale(1.2, 1.2)
+
+			// 飞金币动画
+			for (let i = 0, imgCoinCount = this.boxCoins.numChildren; i < imgCoinCount; i++) {
+				Laya.timer.once(delayTime, this, function (index: number) {
+					let coin = this.boxCoins.getChildAt(index) as Laya.Image
+					Laya.Tween.to(coin, {
+						x: coinFlyTargetToBoxLocal.x,
+						y: coinFlyTargetToBoxLocal.y,
+						scaleX: 0.5,
+						scaleY: 0.5,
+					}, 450)
+				}, [i], false)
+				delayTime += 10
+			}
+			// 文字动画
+			Laya.timer.once(delayTime + 450, this, function (this: ClickPlaygroundView) {
+				this.boxCoins.alpha = 0
+				this.boxCoins.scale(1, 1)
+
+				this.imgCoin.scale(1, 1)
+				for (let i = 0, imgCoinCount = this.boxCoins.numChildren; i < imgCoinCount; i++) {
+					let coin = this.boxCoins.getChildAt(i) as Laya.Image
+					Laya.Tween.clearAll(coin)
+					coin.scale(1, 1)
+					coin.x = Math.round(Math.random() * this.boxCoins.width)
+					coin.y = Math.round(Math.random() * this.boxCoins.height)
+				}
+
+				let tweenObj = {
+					ratio: 0
+				}
+				let tween = Laya.Tween.to(tweenObj, {
+					ratio: 1
+				}, 300, Laya.Ease.sineIn, Laya.Handler.create(this, function() {
+					// 全部动画完毕
+					this.isRunningFX = false
+				}))
+				tween.update = new Handler(this, function (this: ClickPlaygroundView) {
+					let curCount = Math.round(oldCount + tweenObj.ratio * (this.coinCount - oldCount))
+					this.labelCoins.text = `${curCount}`
+				})
+			})
+		})
 	}
 }
 
-//程序入口
-Laya.init(600, 400, WebGL);
-//激活资源版本控制
+Laya.init(750, 1334, WebGL);
+Laya.stage.alignH = 'center'
+Laya.stage.alignV = 'middle'  
+Laya.stage.scaleMode = 'showall'
 Laya.ResourceVersion.enable("version.json", Handler.create(null, beginLoad), Laya.ResourceVersion.FILENAME_VERSION);
 
-function beginLoad(){
+function beginLoad() {
 	Laya.loader.load("res/atlas/comp.atlas", Handler.create(null, onLoaded));
 }
 
 function onLoaded(): void {
-	//实例UI界面
-	var testUI: TestUI = new TestUI();
-	Laya.stage.addChild(testUI);
+	let clickPlaygroundView: ClickPlaygroundView = new ClickPlaygroundView();
+	Laya.stage.addChild(clickPlaygroundView);
 }

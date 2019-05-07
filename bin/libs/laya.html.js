@@ -935,7 +935,6 @@ var HTMLImageElement=(function(_super){
 			Loader.cacheRes(url,tex);
 		}
 		function onloaded (){
-			if (!_$this._style)return;
 			var style=_$this._style;
 			var w=style.widthed(_$this)?-1:_$this._tex.width;
 			var h=style.heighted(_$this)?-1:_$this._tex.height;

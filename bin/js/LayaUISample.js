@@ -1,62 +1,106 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var test = ui.test.TestPageUI;
-var Label = laya.ui.Label;
-var Handler = laya.utils.Handler;
-var Loader = laya.net.Loader;
-var TestUI = (function (_super) {
-    __extends(TestUI, _super);
-    function TestUI() {
-        _super.call(this);
-        //btn是编辑器界面设定的，代码里面能直接使用，并且有代码提示
-        this.btn.on(laya.events.Event.CLICK, this, this.onBtnClick);
-        this.btn2.on(laya.events.Event.CLICK, this, this.onBtn2Click);
+var Label = Laya.Label;
+var Handler = Laya.Handler;
+var Loader = Laya.Loader;
+var WebGL = Laya.WebGL;
+var ClickPlaygroundView = /** @class */ (function (_super) {
+    __extends(ClickPlaygroundView, _super);
+    function ClickPlaygroundView() {
+        var _this = _super.call(this) || this;
+        _this.isRunningFX = false;
+        _this.coinCount = 1000;
+        _this.on(Laya.Event.CLICK, _this, _this.onClick);
+        _this.boxCoins.alpha = 0;
+        _this.labelCoins.text = "" + _this.coinCount;
+        return _this;
     }
-    TestUI.prototype.onBtnClick = function () {
-        //手动控制组件属性
-        this.radio.selectedIndex = 1;
-        this.clip.index = 8;
-        this.tab.selectedIndex = 2;
-        this.combobox.selectedIndex = 0;
-        this.check.selected = true;
-    };
-    TestUI.prototype.onBtn2Click = function () {
-        //通过赋值可以简单快速修改组件属性
-        //赋值有两种方式：
-        //简单赋值，比如：progress:0.2，就是更改progress组件的value为2
-        //复杂复制，可以通知某个属性，比如：label:{color:"#ff0000",text:"Hello LayaAir"}
-        this.box.dataSource = { slider: 50, scroll: 80, progress: 0.2, input: "This is a input", label: { color: "#ff0000", text: "Hello LayaAir" } };
-        //list赋值，先获得一个数据源数组
-        var arr = [];
-        for (var i = 0; i < 100; i++) {
-            arr.push({ label: "item " + i, clip: i % 9 });
+    ClickPlaygroundView.prototype.onClick = function (e) {
+        if (this.isRunningFX) {
+            return;
         }
-        //给list赋值更改list的显示
-        this.list.array = arr;
-        //还可以自定义list渲染方式，可以打开下面注释看一下效果
-        //list.renderHandler = new Handler(this, onListRender);
+        this.boxCoins.pos(e.stageX, e.stageY);
+        console.log(e.stageX, e.stageY);
+        Laya.timer.once(100, this, this.play);
     };
-    TestUI.prototype.onListRender = function (item, index) {
-        //自定义list的渲染方式
-        var label = item.getChildByName("label");
-        if (index % 2) {
-            label.color = "#ff0000";
-        }
-        else {
-            label.color = "#000000";
-        }
+    ClickPlaygroundView.prototype.play = function () {
+        this.isRunningFX = true;
+        var oldCount = this.coinCount;
+        var newCount = this.coinCount + 100 + Math.floor(Math.random() * 1000);
+        this.coinCount = newCount;
+        var coinFlyTargetGlobal = this.imgCoin.localToGlobal(new Laya.Point(5, 5));
+        console.log(coinFlyTargetGlobal);
+        var coinFlyTargetToBoxLocal = this.boxCoins.globalToLocal(coinFlyTargetGlobal, true);
+        console.log(coinFlyTargetToBoxLocal);
+        this.ani1.play(0, false);
+        this.ani1.once(Laya.Event.COMPLETE, this, function () {
+            var delayTime = 0;
+            this.imgCoin.scale(1.2, 1.2);
+            // 飞金币动画
+            for (var i = 0, imgCoinCount = this.boxCoins.numChildren; i < imgCoinCount; i++) {
+                Laya.timer.once(delayTime, this, function (index) {
+                    var coin = this.boxCoins.getChildAt(index);
+                    Laya.Tween.to(coin, {
+                        x: coinFlyTargetToBoxLocal.x,
+                        y: coinFlyTargetToBoxLocal.y,
+                        scaleX: 0.5,
+                        scaleY: 0.5,
+                    }, 450);
+                }, [i], false);
+                delayTime += 10;
+            }
+            // 文字动画
+            Laya.timer.once(delayTime + 450, this, function () {
+                this.boxCoins.alpha = 0;
+                this.boxCoins.scale(1, 1);
+                this.imgCoin.scale(1, 1);
+                for (var i = 0, imgCoinCount = this.boxCoins.numChildren; i < imgCoinCount; i++) {
+                    var coin = this.boxCoins.getChildAt(i);
+                    Laya.Tween.clearAll(coin);
+                    coin.scale(1, 1);
+                    coin.x = Math.round(Math.random() * this.boxCoins.width);
+                    coin.y = Math.round(Math.random() * this.boxCoins.height);
+                }
+                var tweenObj = {
+                    ratio: 0
+                };
+                var tween = Laya.Tween.to(tweenObj, {
+                    ratio: 1
+                }, 300, Laya.Ease.sineIn, Laya.Handler.create(this, function () {
+                    // 全部动画完毕
+                    this.isRunningFX = false;
+                }));
+                tween.update = new Handler(this, function () {
+                    var curCount = Math.round(oldCount + tweenObj.ratio * (this.coinCount - oldCount));
+                    this.labelCoins.text = "" + curCount;
+                });
+            });
+        });
     };
-    return TestUI;
-}(ui.test.TestPageUI));
-// 程序入口
-Laya.init(600, 400);
-Laya.loader.load([{ url: "res/atlas/comp.json", type: Loader.ATLAS }], Handler.create(this, this.onLoaded));
+    return ClickPlaygroundView;
+}(ui.test.CoinFXUI));
+Laya.init(750, 1334, WebGL);
+Laya.stage.alignH = 'center';
+Laya.stage.alignV = 'middle';
+Laya.stage.scaleMode = 'showall';
+Laya.ResourceVersion.enable("version.json", Handler.create(null, beginLoad), Laya.ResourceVersion.FILENAME_VERSION);
+function beginLoad() {
+    Laya.loader.load("res/atlas/comp.atlas", Handler.create(null, onLoaded));
+}
 function onLoaded() {
-    //实例UI界面
-    var testUI = new TestUI();
-    Laya.stage.addChild(testUI);
+    var clickPlaygroundView = new ClickPlaygroundView();
+    Laya.stage.addChild(clickPlaygroundView);
 }
 //# sourceMappingURL=LayaUISample.js.map

@@ -8341,7 +8341,7 @@ var WebGLCharImage=(function(_super){
 			this._ctx.textBaseline="top";
 			this._ctx.translate(this.CborderSize,this.CborderSize);
 			if (this.xs !=1 || this.ys !=1){
-				this._ctx.setTransform(this.xs,0,0,this.ys,0,0);
+				this._ctx.scale(this.xs,this.ys);
 			}
 			if (this.fillColor && this.borderColor){
 				this._ctx.strokeStyle=this.borderColor;

@@ -26521,7 +26521,6 @@ declare module laya.utils {
         /** 微信内*/
         static onWeiXin: boolean;
         static onMiniGame: boolean;
-		static onBDMiniGame: boolean;
         static onLimixiu: boolean;
         /** 表示是否在 PC 端。*/
         static onPC: boolean;
@@ -30285,7 +30284,440 @@ declare module laya.webgl {
         compressedTexImage2D(...args: any[]): void;
     }
 }
+declare module laya.wx.mini {
+    import EventDispatcher = laya.events.EventDispatcher;
+    /**
+     * ...
+     * @author ww
+     */
+    class MiniAccelerator extends EventDispatcher {
+        constructor();
+        static __init__(): void;
+        static startListen(callBack: Function): void;
+        static stopListen(): void;
+        /**
+         * 侦听加速器运动。
+         * @param observer	回调函数接受4个参数，见类说明。
+         */
+        on(type: string, caller: any, listener: Function, args?: Array<any>): EventDispatcher;
+        /**
+         * 取消侦听加速器。
+         * @param	handle	侦听加速器所用处理器。
+         */
+        off(type: string, caller: any, listener: Function, onceOnly?: boolean): EventDispatcher;
+    }
+}
 
+declare module laya.wx.mini {
+    import Handler = laya.utils.Handler;
+
+    
+    class MiniAdpter {
+         
+
+
+        /**是否自动缓存下载的图片跟声音文件，默认为true**/
+        public static  autoCacheFile:Boolean;
+		/**50M缓存容量满时每次清理容量值,默认每次清理5M**/
+		public static  minClearSize:Number; 
+		/**本地资源列表**/
+		public static  nativefiles:Object;
+         
+
+        /**
+         * 初始化回调
+         * @param isPostMsg 是否需要在主域中自动将加载的文本数据自动传递到子域，默认 false
+         * @param isSon 是否是子域，默认为false
+         * @param isCacheFile 是否缓存下载的图片跟声音文件，默认true缓存
+         */
+        static init(isPosMsg?: boolean, isSon?: boolean, isCacheFile?: boolean): void;
+      
+      /**
+       * 判断文件是否在4M包
+       * @param url 文件路径
+       * @return 
+       */
+      
+        static hasNativeFile(fileUrl:String):Boolean;
+        
+       
+
+        /**
+       * 通过url地址获取文件编码(编码的设置只有在直接调用本地读取4M包非图片文件的时候才需要指定，50M空间文件加载无需设置文件编码) 
+       * @param url 文件路径(绝对地址)
+       * @param type 文件类型
+       * @return 
+       */		
+        static getUrlEncode(url:String,type:String):String;
+
+        /**
+         * 下载文件
+         * @param url 文件路径（绝对地址）
+         * @param type 文件类型
+         * @param callBack 文件加载回调，回调内容[errorCode码(0成功,1失败,2加载进度)
+         * @param encoding 文件编码默认 ascill，非图片文件加载需要设置相应的编码，二进制编码为空字符串
+
+         */
+        static downLoadFile(fileUrl: string, fileType?: string, callBack?: Handler, encoding?: string): void;
+        
+       /**
+        * 删除指定缓存文件
+        * @param fileUrl文件路径(绝对地址)
+        * @param callBack 删除回调函数
+        */
+
+        static remove(fileUrl?:String,callBack?:Handler): void;
+        
+
+        /**
+        * 清空缓存空间文件内容
+        */        
+        public static removeAll():void
+        /**
+         * 
+         * 获取文件信息
+         * @param fileUrl
+         * @return
+         */
+        static getFileInfo(fileUrl: string):Object;
+        
+        /**
+         * 获取文件列表
+         */
+        static getFileList():Object;
+     
+    }
+}
+declare module laya.wx.mini {
+    import EventDispatcher = laya.events.EventDispatcher;
+    import Handler = laya.utils.Handler;
+    class MiniFileMgr extends EventDispatcher {
+        /**文件缓存列表**/
+        static filesListObj: any;
+        /**文件磁盘路径**/
+        static fileNativeDir: string;
+        /**存储在磁盘的文件列表名称**/
+        static fileListName: string;
+        /**子域数据存储对象**/
+        static ziyuFileData: any;
+        /**加载路径设定(相当于URL.rootPath)**/
+        static loadPath: string;
+        /**本地资源列表**/
+        static loadNativeFile: Array<any>;
+        static DESCENDING: number;
+        static NUMERIC: number;
+        /**
+         * 是否是本地4M包文件
+         * @param url
+         * @return
+         */
+        static isLocalNativeFile(url: string): boolean;
+        /**
+         * 判断缓存里是否存在文件
+         * @param fileUrl
+         * @return
+         */
+        static getFileInfo(fileUrl: string): any;
+        /**
+         * 本地读取
+         * @param nativeFileUrl 文件磁盘路径
+         * @param encoding 文件读取的编码格式
+         * @param callBack 回调处理
+         * @param readyUrl 文件请求加载地址
+         * @param isSaveFile 是否自动缓存下载的文件,只有在开发者自己单独加载时生效
+         * @param fileType 文件类型
+         */
+        static read(filePath: string, encoding?: string, callBack?: Handler, readyUrl?: string, isSaveFile?: boolean, fileType?: string): void;
+        /**
+         * 下载远端文件(非图片跟声音文件)
+         * @param fileUrl  文件远端下载地址
+         * @param encode 文件编码
+         * @param callBack 完成回调
+         * @param readyUrl 文件真实下载地址
+         * @param isSaveFile 是否自动缓存下载的文件,只有在开发者自己单独加载时生效
+         * @param fileType 文件类型
+         */
+        static downFiles(fileUrl: string, encoding?: string, callBack?: Handler, readyUrl?: string, isSaveFile?: boolean, fileType?: string): void;
+        /**
+         * 本地本地磁盘文件读取
+         * @param nativeFileUrl 文件磁盘临时地址
+         * @param encoding 文件设定读取的编码格式
+         * @param callBack 完成回调
+         * @param readyUrl 真实的下载地址
+         * @param isSaveFile 是否自动缓存下载的文件,只有在开发者自己单独加载时生效
+         * @param fileType 文件类型
+         */
+        static readFile(filePath: string, encoding?: string, callBack?: Handler, readyUrl?: string, isSaveFile?: boolean, fileType?: string): void;
+        /**
+         * 下载远端文件(图片跟声音文件)
+         * @param fileUrl  文件远端下载地址
+         * @param encode 文件编码
+         * @param callBack 完成回调
+         * @param readyUrl 文件真实下载地址
+         * @param isSaveFile 是否自动缓存下载的文件,只有在开发者自己单独加载时生效
+         */
+        static downOtherFiles(fileUrl: string, callBack?: Handler, readyUrl?: string, isSaveFile?: boolean): void;
+        /**
+         * 下载文件
+         * @param fileUrl 文件远端地址
+         * @param fileType 文件类型(image、text、json、xml、arraybuffer、sound、atlas、font)
+         * @param callBack 文件加载回调,回调内容[errorCode码(0成功,1失败,2加载进度)
+         * @param encoding 文件编码默认 ascill，非图片文件加载需要设置相应的编码，二进制编码为空字符串
+         */
+        static downLoadFile(fileUrl: string, fileType?: string, callBack?: Handler, encoding?: string): void;
+        /**
+         * 数组排序
+         * @param array
+         * @param name
+         * @param options
+         * @return
+         */
+        static sortOn(array: Array<any>, name: any, options?: number): Array<any>;
+        /**
+         * 获取文件磁盘的路径(md5)
+         * @param fileName
+         * @return
+         */
+        static getFileNativePath(fileName: string): string;
+        /**
+         * 从本地删除文件
+         * @param tempFileName 文件临时地址 ,为空字符串时就会从文件列表删除
+         * @param readyUrl 文件真实下载地址
+         * @param callBack 回调处理，在存储图片时用到
+         * @param encoding  文件编码
+         * @param fileSize 文件大小
+         */
+        static remove(tempFileName: string, readyUrl?: string, callBack?: Handler, encoding?: string, fileSize?: number): void;
+        /**
+         * 存储更新文件列表
+         * @param readyUrl
+         * @param md5Name
+         * @param isAdd
+         * @param encoding
+         * @param callBack
+         * @param fileSize 文件大小
+         */
+        static onSaveFile(readyUrl: string, md5Name: string, isAdd?: boolean, encoding?: string, callBack?: Handler, fileSize?: number): void;
+        /**
+         *获取当前缓存使用的空间大小(字节数，除以1024 再除以1024可以换算成M)
+         * @return
+         */
+        static getCacheUseSize(): number;
+        /**
+         * 判断资源目录是否存在
+         * @param dirPath 磁盘设定路径
+         * @param callBack 回调处理
+         */
+        static existDir(dirPath: string, callBack: Handler): void;
+        /**
+         * 本地读取
+         * @param nativeFileUrl 文件磁盘路径
+         * @param encoding 文件读取的编码格式
+         * @param callBack 回调处理
+         * @param readyUrl 文件请求加载地址
+         */
+        static readSync(filePath: string, encoding?: string, callBack?: Handler, readyUrl?: string): void;
+        /**
+         * 设置磁盘文件存储路径
+         * @param value 磁盘路径
+         * @return
+         */
+        static setNativeFileDir(value: string): void;
+    }
+}
+declare module laya.wx.mini {
+    class MiniImage {
+        protected _loadImage(url: string): void;
+    }
+}
+declare module laya.wx.mini {
+    class MiniInput {
+        constructor();
+        static wxinputFocus(e: any): void;
+        static inputEnter(): void;
+        static wxinputblur(): void;
+        static hideKeyboard(): void;
+    }
+}
+declare module laya.wx.mini {
+    import EventDispatcher = laya.events.EventDispatcher;
+    class MiniLoader extends EventDispatcher {
+        constructor();
+        /**
+         * 获取url跟encoding值
+         * @param url 文件路径
+         * @param type 文件类型
+         * @return
+         */
+        static getUrlAndEncode: Function;
+    }
+}
+declare module laya.wx.mini {
+    /**
+     * 本地数据存储的大小限制为 10MB
+     * @author xiaosong
+     */
+    class MiniLocalStorage {
+        /**
+         * 表示是否支持  <code>LocalStorage</code>。
+         */
+        static support: boolean;
+        /**
+         *  数据列表。
+         */
+        static items: any;
+        constructor();
+        static __init__(): void;
+        /**
+         * 存储指定键名和键值，字符串类型。
+         * @param key 键名。
+         * @param value 键值。
+         */
+        static setItem(key: string, value: any): void;
+        /**
+         * 获取指定键名的值。
+         * @param key 键名。
+         * @return 字符串型值。
+         */
+        static getItem(key: string): string;
+        /**
+         * 存储指定键名及其对应的 <code>Object</code> 类型值。
+         * @param key 键名。
+         * @param value 键值。是 <code>Object</code> 类型，此致会被转化为 JSON 字符串存储。
+         */
+        static setJSON(key: string, value: any): void;
+        /**
+         * 获取指定键名对应的 <code>Object</code> 类型值。
+         * @param key 键名。
+         * @return <code>Object</code> 类型值
+         */
+        static getJSON(key: string): any;
+        /**
+         * 删除指定键名的信息。
+         * @param key 键名。
+         */
+        static removeItem(key: string): void;
+        /**
+         * 清除本地存储信息。
+         */
+        static clear(): void;
+        /**同步获取当前storage的相关信息**/
+        static getStorageInfoSync(): any;
+    }
+}
+declare module laya.wx.mini {
+    /**
+     * ...
+     * @author ww
+     */
+    class MiniLocation {
+        constructor();
+        static __init__(): void;
+        static getCurrentPosition(success?: Function, error?: Function, options?: any): void;
+        static watchPosition(success?: Function, error?: Function, options?: any): number;
+        static clearWatch(id: number): void;
+    }
+}
+declare module laya.wx.mini {
+    import EventDispatcher = laya.events.EventDispatcher;
+    class MiniSound extends EventDispatcher {
+        _sound: any;
+        /**
+         * 声音URL
+         */
+        url: string;
+        /**
+         * 是否已加载完成
+         */
+        loaded: boolean;
+        readyUrl: string;
+        constructor();
+        /**
+         * 加载声音。
+         * @param url 地址。
+         *
+         */
+        load(url: string): void;
+        /**
+         * 给传入的函数绑定作用域，返回绑定后的函数。
+         * @param	fun 函数对象。
+         * @param	scope 函数作用域。
+         * @return 绑定后的函数。
+         */
+        static bindToThis(fun: Function, scope: any): Function;
+        /**
+         * 播放声音。
+         * @param startTime 开始时间,单位秒
+         * @param loops 循环次数,0表示一直循环
+         * @return 声道 SoundChannel 对象。
+         *
+         */
+        play(startTime?: number, loops?: number): MiniSoundChannel;
+        /**
+         * 获取总时间。
+         */
+        readonly duration: number;
+        /**
+         * 释放声音资源。
+         *
+         */
+        dispose(): void;
+    }
+}
+declare module laya.wx.mini {
+    import SoundChannel = laya.media.SoundChannel;
+    /**
+     * @private
+     * wxaudio 方式播放声音的音轨控制
+     */
+    class MiniSoundChannel extends SoundChannel {
+        constructor(audio: any, miniSound: MiniSound);
+        /**
+         * 给传入的函数绑定作用域，返回绑定后的函数。
+         * @param	fun 函数对象。
+         * @param	scope 函数作用域。
+         * @return 绑定后的函数。
+         */
+        static bindToThis(fun: Function, scope: any): Function;
+        /**
+         * 播放
+         */
+        play(): void;
+        /**
+         * 自动播放
+         * @param value
+         */
+        autoplay: boolean;
+        /**
+         * 当前播放到的位置
+         * @return
+         *
+         */
+        readonly position: number;
+        /**
+         * 获取总时间。
+         */
+        readonly duration: number;
+        /**
+         * 停止播放
+         *
+         */
+        stop(): void;
+        pause(): void;
+        loop: boolean;
+        resume(): void;
+        /**
+         * 获取音量
+         * @return
+         */
+        /**
+         * 设置音量
+         * @param v
+         *
+         */
+        volume: number;
+    }
+}
 declare module Laya {
     class AnimationContent extends laya.ani.AnimationContent {
     }
@@ -31354,6 +31786,8 @@ declare module Laya {
     }
     class WebGLContext extends laya.webgl.WebGLContext {
     }
+    class MiniAccelerator extends laya.wx.mini.MiniAccelerator {
+    }
  
     // class Node extends PathFinding.core.Node {
     // }
@@ -31362,6 +31796,8 @@ declare module Laya {
     class DebugPanel extends laya.debug.DebugPanel {
     }
     class DebugTool extends laya.debug.DebugTool {
+    }
+    class MiniAdpter extends laya.wx.mini.MiniAdpter {
     }
 }
 declare class Laya3D {
